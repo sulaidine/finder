@@ -14,7 +14,9 @@
     "submit:ios": "eas submit --platform ios"
   },
   "dependencies": {
+    "@expo-google-fonts/poppins": "^0.4.0",
     "@expo/vector-icons": "^14.0.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/bottom-tabs": "^6.5.11",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "^6.3.20",

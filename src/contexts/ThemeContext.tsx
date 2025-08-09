@@ -1,6 +1,6 @@
 /**
- * Context para gerenciamento de tema (claro/escuro)
- * Persiste a preferência do usuário no AsyncStorage
+ * Context para gerenciamento de tema moderno
+ * Suporte a tema claro/escuro com persistência
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -11,7 +11,20 @@ import { Theme, ThemeColors } from '@/types';
 
 interface ThemeContextType {
   theme: Theme;
-  colors: ThemeColors;
+  colors: ThemeColors & {
+    gradientPrimary: string[];
+    gradientSecondary: string[];
+    gradientSuccess: string[];
+    primaryDark: string;
+    primaryLight: string;
+    secondaryLight: string;
+    successLight: string;
+    warningLight: string;
+    errorLight: string;
+    textTertiary: string;
+    borderLight: string;
+    surfaceElevated: string;
+  };
   toggleTheme: () => void;
   isDark: boolean;
 }

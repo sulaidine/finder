@@ -1,5 +1,6 @@
 /**
- * Tela de pagamento
+ * Tela de pagamento moderna
+ * Interface elegante com breakdown detalhado
  */
 
 import React, { useState } from 'react';
@@ -16,12 +17,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ClientStackParamList } from '@/navigation/MainNavigator';
 import { RootState } from '@/store';
-import { FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/Colors';
+import { FontSizes, FontWeights, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 
 type PaymentScreenNavigationProp = StackNavigationProp<ClientStackParamList, 'Payment'>;
 type PaymentScreenRouteProp = RouteProp<ClientStackParamList, 'Payment'>;
@@ -40,25 +42,36 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
   const totalAmount = orderData.amount || 2500;
   const advancePayment = totalAmount / 2;
+  const serviceFeePct = 5;
+  const serviceFee = Math.round(totalAmount * serviceFeePct / 100);
 
   const paymentMethods = [
     {
       id: 'card',
       name: 'Cartão de Crédito/Débito',
-      description: 'Visa, Mastercard',
+      description: 'Visa, Mastercard, American Express',
       icon: 'card' as keyof typeof Ionicons.glyphMap,
+      color: '#6366F1',
     },
     {
       id: 'mobile',
       name: 'Dinheiro Móvel',
-      description: 'M-Pesa, E-Mola',
+      description: 'M-Pesa, E-Mola, Mkesh',
       icon: 'phone-portrait' as keyof typeof Ionicons.glyphMap,
+      color: '#10B981',
+    },
+    {
+      id: 'bank',
+      name: 'Transferência Bancária',
+      description: 'BCI, Standard Bank, BIM',
+      icon: 'business' as keyof typeof Ionicons.glyphMap,
+      color: '#F59E0B',
     },
   ];
 
   const handlePayment = async () => {
     if (!paymentMethod) {
-      Alert.alert('Erro', 'Por favor, selecione um método de pagamento');
+      Alert.alert('Método de pagamento', 'Por favor, selecione um método de pagamento');
       return;
     }
 
@@ -74,106 +87,148 @@ export default function PaymentScreen({ navigation, route }: Props) {
     }, 2000);
   };
 
-  const PaymentMethodOption = ({ method }: { method: typeof paymentMethods[0] }) => (
-    <TouchableOpacity
-      style={[
-        styles.paymentOption,
-        {
-          backgroundColor: colors.surface,
-          borderColor: paymentMethod === method.id ? colors.primary : colors.border,
-        },
-      ]}
-      onPress={() => setPaymentMethod(method.id)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.paymentOptionContent}>
-        <Ionicons name={method.icon} size={24} color={colors.textSecondary} />
-        <View style={styles.paymentOptionText}>
-          <Text style={[styles.paymentOptionName, { color: colors.text }]}>
-            {method.name}
-          </Text>
-          <Text style={[styles.paymentOptionDescription, { color: colors.textSecondary }]}>
-            {method.description}
-          </Text>
+  const PaymentMethodCard = ({ method }: { method: typeof paymentMethods[0] }) => {
+    const isSelected = paymentMethod === method.id;
+    
+    return (
+      <TouchableOpacity
+        style={[
+          styles.paymentMethodCard,
+          {
+            backgroundColor: isSelected ? method.color + '10' : colors.surface,
+            borderColor: isSelected ? method.color : colors.border,
+            ...Shadows.small,
+          },
+        ]}
+        onPress={() => setPaymentMethod(method.id)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.paymentMethodContent}>
+          <View style={[styles.paymentMethodIcon, { backgroundColor: method.color + '15' }]}>
+            <Ionicons name={method.icon} size={24} color={method.color} />
+          </View>
+          <View style={styles.paymentMethodText}>
+            <Text style={[styles.paymentMethodName, { color: colors.text }]}>
+              {method.name}
+            </Text>
+            <Text style={[styles.paymentMethodDescription, { color: colors.textSecondary }]}>
+              {method.description}
+            </Text>
+          </View>
+          {isSelected && (
+            <View style={[styles.selectedIndicator, { backgroundColor: method.color }]}>
+              <Ionicons name="checkmark" size={16} color={colors.white} />
+            </View>
+          )}
         </View>
-        {paymentMethod === method.id && (
-          <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>
+          <LinearGradient
+            colors={colors.gradientPrimary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
+          >
+            <Text style={styles.headerTitle}>
               Pagamento
             </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Confirme os detalhes e efetue o pagamento
+            <Text style={styles.headerSubtitle}>
+              Confirme e efetue o pagamento
             </Text>
-          </View>
+          </LinearGradient>
 
-          {/* Price Breakdown */}
-          <Card style={styles.breakdownCard}>
-            <Text style={[styles.breakdownTitle, { color: colors.text }]}>
-              Resumo do pagamento
-            </Text>
-            <View style={styles.breakdownContent}>
-              <View style={styles.breakdownRow}>
-                <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>
-                  Valor do frete:
-                </Text>
-                <Text style={[styles.breakdownValue, { color: colors.text }]}>
-                  {totalAmount} MT
-                </Text>
+          <View style={styles.bodyContent}>
+            {/* Amount Card */}
+            <Card variant="elevated" style={styles.amountCard}>
+              <LinearGradient
+                colors={colors.gradientSuccess}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.amountGradient}
+              >
+                <View style={styles.amountContent}>
+                  <Text style={styles.amountLabel}>
+                    Total a pagar agora
+                  </Text>
+                  <Text style={styles.amountValue}>
+                    {advancePayment} MT
+                  </Text>
+                  <Text style={styles.amountNote}>
+                    50% antecipado • Restante na entrega
+                  </Text>
+                </View>
+              </LinearGradient>
+            </Card>
+
+            {/* Breakdown */}
+            <Card style={styles.breakdownCard}>
+              <Text style={[styles.breakdownTitle, { color: colors.text }]}>
+                Detalhamento
+              </Text>
+              <View style={styles.breakdownContent}>
+                <BreakdownRow
+                  label="Valor do frete"
+                  value={`${totalAmount} MT`}
+                  colors={colors}
+                />
+                <BreakdownRow
+                  label={`Taxa de serviço (${serviceFeePct}%)`}
+                  value={`${serviceFee} MT`}
+                  colors={colors}
+                />
+                <View style={[styles.separator, { backgroundColor: colors.border }]} />
+                <BreakdownRow
+                  label="Pagamento antecipado (50%)"
+                  value={`${advancePayment} MT`}
+                  colors={colors}
+                  isTotal
+                />
+                <BreakdownRow
+                  label="Restante na entrega"
+                  value={`${totalAmount - advancePayment} MT`}
+                  colors={colors}
+                  isSecondary
+                />
               </View>
-              <View style={styles.breakdownRow}>
-                <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>
-                  Taxa de serviço:
-                </Text>
-                <Text style={[styles.breakdownValue, { color: colors.text }]}>
-                  Incluída
-                </Text>
+            </Card>
+
+            {/* Payment Methods */}
+            <View style={styles.paymentMethodsContainer}>
+              <Text style={[styles.paymentMethodsTitle, { color: colors.text }]}>
+                Método de pagamento
+              </Text>
+              <View style={styles.paymentMethodsList}>
+                {paymentMethods.map((method) => (
+                  <PaymentMethodCard key={method.id} method={method} />
+                ))}
               </View>
-              <View style={styles.separator} />
-              <View style={styles.breakdownRow}>
-                <Text style={[styles.breakdownTotal, { color: colors.text }]}>
-                  Total a pagar agora (50%):
-                </Text>
-                <Text style={[styles.breakdownTotalValue, { color: colors.primary }]}>
-                  {advancePayment} MT
-                </Text>
-              </View>
-              <Text style={[styles.breakdownNote, { color: colors.textSecondary }]}>
-                Restante será pago na entrega
+            </View>
+
+            {/* Security Note */}
+            <View style={[styles.securityNote, { backgroundColor: colors.surface }]}>
+              <Ionicons name="shield-checkmark" size={16} color={colors.success} />
+              <Text style={[styles.securityText, { color: colors.textSecondary }]}>
+                Seus dados estão protegidos com criptografia de ponta a ponta
               </Text>
             </View>
-          </Card>
 
-          {/* Payment Methods */}
-          <View style={styles.paymentMethodsContainer}>
-            <Text style={[styles.paymentMethodsTitle, { color: colors.text }]}>
-              Método de pagamento
-            </Text>
-            <View style={styles.paymentMethodsList}>
-              {paymentMethods.map((method) => (
-                <PaymentMethodOption key={method.id} method={method} />
-              ))}
-            </View>
-          </View>
-
-          {/* Payment Button */}
-          <View style={styles.buttonContainer}>
+            {/* Payment Button */}
             <Button
               title={`Pagar ${advancePayment} MT`}
               onPress={handlePayment}
+              variant="gradient"
               loading={loading}
               disabled={!paymentMethod}
               size="large"
+              icon={<Ionicons name="card" size={20} color={colors.white} />}
+              style={styles.paymentButton}
             />
           </View>
         </View>
@@ -181,6 +236,29 @@ export default function PaymentScreen({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
+
+const BreakdownRow = ({ label, value, colors, isTotal = false, isSecondary = false }: any) => (
+  <View style={styles.breakdownRow}>
+    <Text style={[
+      styles.breakdownLabel,
+      {
+        color: isTotal ? colors.text : isSecondary ? colors.textSecondary : colors.textSecondary,
+        fontFamily: isTotal ? 'Poppins-SemiBold' : 'Poppins-Regular',
+      }
+    ]}>
+      {label}
+    </Text>
+    <Text style={[
+      styles.breakdownValue,
+      {
+        color: isTotal ? colors.primary : isSecondary ? colors.textSecondary : colors.text,
+        fontFamily: isTotal ? 'Poppins-Bold' : 'Poppins-SemiBold',
+      }
+    ]}>
+      {value}
+    </Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -190,36 +268,77 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.xxxl,
   },
   header: {
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-    alignItems: 'center',
+    borderBottomLeftRadius: BorderRadius.xxxl,
+    borderBottomRightRadius: BorderRadius.xxxl,
+    paddingTop: Spacing.xxxl,
+    paddingBottom: Spacing.xxxl,
+    paddingHorizontal: Spacing.xxl,
+    marginBottom: Spacing.xxl,
   },
-  title: {
-    fontSize: FontSizes.xxl,
-    fontFamily: 'Poppins-SemiBold',
-    fontWeight: FontWeights.semibold,
+  headerTitle: {
+    fontSize: FontSizes.xxxxl,
+    fontFamily: 'Poppins-Bold',
+    fontWeight: FontWeights.bold,
+    color: '#FFFFFF',
+    textAlign: 'center',
     marginBottom: Spacing.sm,
   },
-  subtitle: {
-    fontSize: FontSizes.md,
+  headerSubtitle: {
+    fontSize: FontSizes.lg,
     fontFamily: 'Poppins-Regular',
+    color: '#FFFFFF',
+    opacity: 0.9,
     textAlign: 'center',
   },
-  breakdownCard: {
-    marginBottom: Spacing.lg,
+  bodyContent: {
+    paddingHorizontal: Spacing.xxl,
   },
-  breakdownTitle: {
+  amountCard: {
+    padding: 0,
+    marginBottom: Spacing.xl,
+    overflow: 'hidden',
+  },
+  amountGradient: {
+    padding: Spacing.xxl,
+    alignItems: 'center',
+  },
+  amountContent: {
+    alignItems: 'center',
+  },
+  amountLabel: {
     fontSize: FontSizes.md,
-    fontFamily: 'Poppins-SemiBold',
-    fontWeight: FontWeights.semibold,
+    fontFamily: 'Poppins-Regular',
+    color: '#FFFFFF',
+    opacity: 0.9,
     marginBottom: Spacing.sm,
   },
+  amountValue: {
+    fontSize: FontSizes.xxxxxl,
+    fontFamily: 'Poppins-Bold',
+    fontWeight: FontWeights.bold,
+    color: '#FFFFFF',
+    marginBottom: Spacing.sm,
+  },
+  amountNote: {
+    fontSize: FontSizes.sm,
+    fontFamily: 'Poppins-Regular',
+    color: '#FFFFFF',
+    opacity: 0.8,
+  },
+  breakdownCard: {
+    marginBottom: Spacing.xl,
+  },
+  breakdownTitle: {
+    fontSize: FontSizes.lg,
+    fontFamily: 'Poppins-SemiBold',
+    fontWeight: FontWeights.semibold,
+    marginBottom: Spacing.lg,
+  },
   breakdownContent: {
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
   breakdownRow: {
     flexDirection: 'row',
@@ -227,68 +346,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   breakdownLabel: {
-    fontSize: FontSizes.sm,
-    fontFamily: 'Poppins-Regular',
+    fontSize: FontSizes.md,
   },
   breakdownValue: {
-    fontSize: FontSizes.sm,
-    fontFamily: 'Poppins-Regular',
+    fontSize: FontSizes.md,
   },
   separator: {
     height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: Spacing.xs,
-  },
-  breakdownTotal: {
-    fontSize: FontSizes.md,
-    fontFamily: 'Poppins-SemiBold',
-    fontWeight: FontWeights.semibold,
-  },
-  breakdownTotalValue: {
-    fontSize: FontSizes.md,
-    fontFamily: 'Poppins-SemiBold',
-    fontWeight: FontWeights.semibold,
-  },
-  breakdownNote: {
-    fontSize: FontSizes.xs,
-    fontFamily: 'Poppins-Regular',
-    marginTop: Spacing.xs,
+    marginVertical: Spacing.sm,
   },
   paymentMethodsContainer: {
     marginBottom: Spacing.xl,
   },
   paymentMethodsTitle: {
-    fontSize: FontSizes.md,
+    fontSize: FontSizes.lg,
     fontFamily: 'Poppins-SemiBold',
     fontWeight: FontWeights.semibold,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   paymentMethodsList: {
     gap: Spacing.md,
   },
-  paymentOption: {
+  paymentMethodCard: {
     borderWidth: 2,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
   },
-  paymentOptionContent: {
+  paymentMethodContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
-  paymentOptionText: {
+  paymentMethodIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paymentMethodText: {
     flex: 1,
   },
-  paymentOptionName: {
+  paymentMethodName: {
     fontSize: FontSizes.md,
-    fontFamily: 'Poppins-Medium',
-    fontWeight: FontWeights.medium,
+    fontFamily: 'Poppins-SemiBold',
+    fontWeight: FontWeights.semibold,
+    marginBottom: Spacing.xs,
   },
-  paymentOptionDescription: {
+  paymentMethodDescription: {
     fontSize: FontSizes.sm,
     fontFamily: 'Poppins-Regular',
   },
-  buttonContainer: {
-    paddingTop: Spacing.md,
+  selectedIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  securityNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.xl,
+  },
+  securityText: {
+    fontSize: FontSizes.sm,
+    fontFamily: 'Poppins-Regular',
+    flex: 1,
+  },
+  paymentButton: {
+    width: '100%',
   },
 });

@@ -1,34 +1,55 @@
 /**
- * Componente de card customizado
+ * Componente de card moderno com elevação e bordas suaves
  */
 
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { BorderRadius, Spacing } from '@/constants/Colors';
+import { BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 
 interface CardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   padding?: number;
+  variant?: 'default' | 'elevated' | 'outlined';
 }
 
-export function Card({ children, style, padding = Spacing.md }: CardProps) {
+export function Card({ 
+  children, 
+  style, 
+  padding = Spacing.xl,
+  variant = 'default'
+}: CardProps) {
   const { colors } = useTheme();
 
-  const cardStyle: ViewStyle = {
-    backgroundColor: colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding,
-    shadowColor: colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  const getCardStyle = (): ViewStyle => {
+    const baseStyle: ViewStyle = {
+      backgroundColor: colors.surface,
+      borderRadius: BorderRadius.xxl,
+      padding,
+    };
+
+    switch (variant) {
+      case 'elevated':
+        return {
+          ...baseStyle,
+          backgroundColor: colors.surfaceElevated,
+          ...Shadows.large,
+        };
+      case 'outlined':
+        return {
+          ...baseStyle,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Shadows.small,
+        };
+      default:
+        return {
+          ...baseStyle,
+          ...Shadows.medium,
+        };
+    }
   };
 
-  return <View style={[cardStyle, style]}>{children}</View>;
+  return <View style={[getCardStyle(), style]}>{children}</View>;
 }

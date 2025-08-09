@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Font from 'expo-font';
+import { useFonts, Poppins_300Light, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold } from '@expo-google-fonts/poppins';
 import { Provider } from 'react-redux';
 
 import { store } from './src/store';
@@ -13,42 +13,29 @@ import { ThemeProvider } from './src/contexts/ThemeContext';
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [appIsReady, setAppIsReady] = React.useState(false);
+  const [fontsLoaded, fontError] = useFonts({
+    'Poppins-Light': Poppins_300Light,
+    'Poppins-Regular': Poppins_400Regular,
+    'Poppins-Medium': Poppins_500Medium,
+    'Poppins-SemiBold': Poppins_600SemiBold,
+    'Poppins-Bold': Poppins_700Bold,
+    'Poppins-ExtraBold': Poppins_800ExtraBold,
+  });
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        // Carrega as fontes customizadas
-        await Font.loadAsync({
-          'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
-          'Poppins-Medium': require('./assets/fonts/Poppins-Medium.ttf'),
-          'Poppins-SemiBold': require('./assets/fonts/Poppins-SemiBold.ttf'),
-          'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
-        });
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setAppIsReady(true);
-      }
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
     }
+  }, [fontsLoaded, fontError]);
 
-    prepare();
-  }, []);
-
-  const onLayoutRootView = React.useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady]);
-
-  if (!appIsReady) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
     <Provider store={store}>
       <ThemeProvider>
-        <SafeAreaProvider onLayout={onLayoutRootView}>
+        <SafeAreaProvider>
           <AppNavigator />
           <StatusBar style="auto" />
         </SafeAreaProvider>
